@@ -1,0 +1,28 @@
+{
+  "name": "js-transformer",
+  "version": "0.0.1",
+  "description": "A Transformer written in pure JavaScript.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sjmog/js-transformer.git"
+  },
+  "keywords": [
+    "javascript",
+    "transformer",
+    "machine",
+    "learning"
+  ],
+  "author": "sjmog (s_morgan@me.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sjmog/js-transformer/issues"
+  },
+  "homepage": "https://github.com/sjmog/js-transformer#readme"
+}
