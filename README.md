@@ -14,4 +14,14 @@ know how to do that.
 
 ## Getting Started
 
-I'll update this when I have something to get started with.
+### Running the tests
+
+Tests are in the `tests` directory. Since we're not using any external libraries, I've defined helpers in `helpers.js`.
+
+```
+npm run test
+```
+
+### Running the program
+
+I'll update this when I have something to run.
