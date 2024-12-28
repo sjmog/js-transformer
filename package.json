@@ -2,12 +2,13 @@
   "name": "js-transformer",
   "version": "0.0.1",
   "description": "A Transformer written in pure JavaScript.",
+  "type": "module",
   "main": "index.js",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "test": "npm run test"
+    "test": "node tests"
   },
   "repository": {
     "type": "git",
