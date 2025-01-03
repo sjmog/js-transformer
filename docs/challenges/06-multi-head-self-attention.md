@@ -1,4 +1,4 @@
-# Challenge 3: Introducing Multi-Head Self-Attention (Heads Up!)
+# Challenge 4: Introducing Multi-Head Self-Attention (Heads Up!)
 
 ## Orientation Summary
 In Transformers, we don’t just compute attention once; we compute it in parallel with different heads, then concatenate and transform. This challenge builds on the previous step by replicating the dot-product attention multiple times.

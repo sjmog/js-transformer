@@ -1,3 +1,5 @@
+import tokenize from "../src/tokenize.js";
+import embed from "../src/embedding.js";
 import dotProductAttention from "../src/dotProductAttention.js";
 import { testEquals } from "./helpers.js";
 
@@ -5,6 +7,54 @@ console.log("Running tests...\n");
 
 const successes = [];
 const failures = [];
+
+testEquals(
+  "tokenize",
+  () => {
+    return tokenize("hello world");
+  },
+  [1, 2],
+  successes,
+  failures
+);
+
+testEquals(
+  "tokenize",
+  () => {
+    return tokenize("hello world hello sam");
+  },
+  [1, 2, 1, 4],
+  successes,
+  failures
+);
+
+testEquals(
+  "tokenize",
+  () => {
+    return tokenize("whassup");
+  },
+  [0],
+  successes,
+  failures
+);
+
+testEquals(
+  "embed",
+  () => {
+    const embeddingMatrix = [
+      [0.01, 0.02],
+      [0.03, 0.04],
+    ];
+    return embed([1, 2, 1], embeddingMatrix);
+  },
+  [
+    [0.01, 0.02],
+    [0.03, 0.04],
+    [0.01, 0.02],
+  ],
+  successes,
+  failures
+);
 
 testEquals(
   "dotProductAttention",

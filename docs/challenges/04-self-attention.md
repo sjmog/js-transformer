@@ -1,12 +1,11 @@
 ## NOTES
-- Should we start here? Why not start with embedding, the "entrypoint" of the transformer?
 - I'm not sure if I "got" the Q, K, V vectors. I have a vague idea, but I'm not sure. That's even after reading a few resources (listed below), the paper, and writing the code.
 - I felt like I was "trip-falling" my way through getting the right values for Q, K, V.
 - Implementing matrix multiplication felt great.
 - Implementing softmax felt great.
 - Implementing the actual attention felt great, though I'm not sure I understand the output. It would be better with a real worked example here – and perhaps actual weights for Q, K, V, to have the transformer "work as I go". (Doing embedding first would have helped here.)
 
-# Challenge 2: Implementing the Dot-Product Attention Core (Dot the ‘I’ in Attention)
+# Challenge 3: Implementing the Dot-Product Attention Core (Dot the ‘I’ in Attention)
 
 ## Orientation Summary
 The foundation of a Transformer is **self-attention**. The simplest building block is the scaled dot-product attention formula. We’ll create a function that takes in queries, keys, and values arrays and outputs the attended result.
