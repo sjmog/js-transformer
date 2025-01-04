@@ -24,6 +24,7 @@ This allows the Transformer to learn different aspects of relationships.
   * slices the Q, K, V matrices into numberOfHeads parts (each part is headDimensions wide. For instance, if numberOfHeads = 2, a Q matrix of `[ [1, 2], [3, 4] ]` becomes `[ [ [ 1 ], [ 3 ] ], [ [ 2 ], [ 4 ] ] ]`).
   * Calls your dot-product attention on each part (the "heads output").
   * Concatenate the heads output horizontally. For instance, if the heads output is `[ [ [ 1 ], [ 3 ] ], [ [ 2 ], [ 4 ] ] ]`, the final output is `[ [ 1, 3 ], [ 2, 4 ] ]`.
+  * Applies a final linear transform, `W_0`, to the output. For now, just use an [Identity Matrix](https://en.wikipedia.org/wiki/Identity_matrix) of the correct size. Later, when we train the Transformer, we'll tell it to adjust this matrix.
 2. Test your function with the following known values:
   * Q = `[ [1, 2], [3, 4] ]`
   * K = `[ [1, 2], [3, 4] ]`

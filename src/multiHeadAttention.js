@@ -1,5 +1,5 @@
 import dotProductAttention from "./dotProductAttention.js";
-
+import { identityMatrix, matMul } from "./helpers.js";
 /**
  * multiHeadAttention
  * @param {number[][]} Q - shape (batchSize x modelDim)
@@ -72,7 +72,13 @@ export default (
 
   // Now you concat all the heads' outputs horizontally (along dimension = headDim).
   // The final shape: batchSize * (numHeads * headDim), which is back to batchSize * modelDim.
-  return concatenateHeads(headsOutput);
+  const concatenatedHeads = concatenateHeads(headsOutput);
+
+  // Apply a final linear transform, `W_0`, to the output.
+  // For now, just use an identity matrix of the correct size.
+  // Later, when we train the Transformer, we'll tell it to adjust this matrix.
+  const W_0 = identityMatrix(modelDimensions);
+  return matMul(concatenatedHeads, W_0);
 };
 
 /**

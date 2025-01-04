@@ -45,3 +45,8 @@ export const softmax = (vector) => {
 
   return exp.map((x) => x / sum);
 };
+
+// create an identity matrix of size n
+export const identityMatrix = (n) => {
+  return Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 1 : 0)));
+};
