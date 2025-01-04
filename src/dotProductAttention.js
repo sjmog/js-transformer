@@ -1,4 +1,3 @@
-import { MODEL_DIMENSIONS } from "./constants.js";
 import {
   matMul,
   matTranspose,
@@ -18,17 +17,13 @@ export default (
   // with each position in the input sequence
   V
 ) => {
-  // d_k is the dimensionality of the model
-  // this must match the number of dimensions in the Query and Key vectors
   if (Q.length !== K.length) {
     throw new Error("Q and K must be the same length");
   }
 
-  if (Q.length !== MODEL_DIMENSIONS) {
-    throw new Error("Q and K length must match the MODEL_DIMENSIONS");
-  }
-
-  const d_k = MODEL_DIMENSIONS;
+  // d_k is the dimensionality of the model
+  // this must match the number of dimensions in the Query and Key vectors
+  const d_k = Q[0].length;
 
   // first, we calculate the dot product of Q and K, which
   // requires us to transpose K to get the correct dimensions.

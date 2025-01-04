@@ -3,6 +3,7 @@ import vocabulary from "../src/vocabulary.json" assert { type: "json" };
 import tokenize from "../src/tokenize.js";
 import embed, { defaultEmbeddingMatrix } from "../src/embedding.js";
 import dotProductAttention from "../src/dotProductAttention.js";
+import multiHeadAttention from "../src/multiHeadAttention.js";
 import { runTests, test } from "./helpers.js";
 
 runTests([
@@ -95,12 +96,34 @@ runTests([
     "Q and K must be the same length"
   ),
   test(
-    "dotProductAttention raises error if Q and K length are not equal to the MODEL_DIMENSIONS",
+    "multiHeadAttention returns correct attention distribution",
+    () => {
+      const Q = [
+        [1, 2],
+        [3, 4],
+      ];
+      const K = [
+        [1, 2],
+        [3, 4],
+      ];
+      const V = [
+        [5, 6],
+        [7, 8],
+      ];
+      return multiHeadAttention(Q, K, V, { numberOfHeads: 2, headDimensions: 1 });
+    },
+    "equals",
+    [
+      [6.76, 7.96],
+      [7.00, 8.00],
+    ]
+  ),
+  test(
+    "multiHeadAttention raises error if Q, K, V are not the same length",
     () =>
-      dotProductAttention(
+      multiHeadAttention(
         [
           [1, 0],
-          [0, 1],
           [0, 1],
         ],
         [
@@ -112,9 +135,10 @@ runTests([
           [5, 6],
           [7, 8],
           [9, 10],
-        ]
+        ],
+        { numberOfHeads: 2, headDimensions: 1 }
       ),
     "raises",
-    "Q and K length must match the MODEL_DIMENSIONS"
+    "Q/K/V matrix dimensions must match the numberOfHeads * headDimensions"
   ),
 ]);
