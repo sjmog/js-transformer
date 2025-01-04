@@ -1,0 +1,3 @@
+const MODEL_DIMENSIONS = 2;
+
+export { MODEL_DIMENSIONS };

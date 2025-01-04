@@ -1,101 +1,120 @@
+import { MODEL_DIMENSIONS } from "../src/constants.js";
+import vocabulary from "../src/vocabulary.json" assert { type: "json" };
 import tokenize from "../src/tokenize.js";
-import embed from "../src/embedding.js";
+import embed, { defaultEmbeddingMatrix } from "../src/embedding.js";
 import dotProductAttention from "../src/dotProductAttention.js";
-import { testEquals } from "./helpers.js";
+import { runTests, test } from "./helpers.js";
 
-console.log("Running tests...\n");
-
-const successes = [];
-const failures = [];
-
-testEquals(
-  "tokenize",
-  () => {
-    return tokenize("hello world");
-  },
-  [1, 2],
-  successes,
-  failures
-);
-
-testEquals(
-  "tokenize",
-  () => {
-    return tokenize("hello world hello sam");
-  },
-  [1, 2, 1, 4],
-  successes,
-  failures
-);
-
-testEquals(
-  "tokenize",
-  () => {
-    return tokenize("whassup");
-  },
-  [0],
-  successes,
-  failures
-);
-
-testEquals(
-  "embed",
-  () => {
-    const embeddingMatrix = [
+runTests([
+  test(
+    "tokenize converts input sequences to token IDs",
+    () => tokenize("hello world hello sam"),
+    "equals",
+    [1, 2, 1, 4]
+  ),
+  test(
+    "tokenize converts unknown vocabulary to 0",
+    () => tokenize("whassup"),
+    "equals",
+    [0]
+  ),
+  test(
+    "defaultEmbeddingMatrix has correct dimensions",
+    () => [defaultEmbeddingMatrix.length, defaultEmbeddingMatrix[0].length],
+    "equals",
+    [vocabulary.length, MODEL_DIMENSIONS]
+  ),
+  test(
+    "defaultEmbeddingMatrix contains non-zero values",
+    () =>
+      defaultEmbeddingMatrix.every((vector) =>
+        vector.every((value) => value !== 0)
+      ),
+    "equals",
+    true
+  ),
+  test(
+    "embed converts token IDs to embeddings",
+    () => {
+      const testEmbeddingMatrix = [
+        [0.01, 0.02],
+        [0.03, 0.04],
+      ];
+      return embed([1, 2, 1], testEmbeddingMatrix);
+    },
+    "equals",
+    [
       [0.01, 0.02],
       [0.03, 0.04],
-    ];
-    return embed([1, 2, 1], embeddingMatrix);
-  },
-  [
-    [0.01, 0.02],
-    [0.03, 0.04],
-    [0.01, 0.02],
-  ],
-  successes,
-  failures
-);
-
-testEquals(
-  "dotProductAttention",
-  () => {
-    const Q = [
-      [1, 0],
-      [0, 1],
-    ];
-    const K = [
-      [1, 2],
-      [3, 4],
-    ];
-    const V = [
-      [5, 6],
-      [7, 8],
-    ];
-    return dotProductAttention(Q, K, V);
-  },
-  [
-    [6.61, 7.61],
-    [6.61, 7.61],
-  ],
-  successes,
-  failures
-);
-
-failures.forEach(({ name, expected, error, result }) => {
-  if (error) {
-    console.error(`\nTest ${name} failed with error`);
-    console.log("Expected:", expected);
-    console.log("Got:");
-    console.error(error);
-  } else {
-    console.error(`\nTest ${name} failed`);
-    console.log("Expected:", expected);
-    console.log("Got:", result);
-  }
-});
-
-console.log(
-  `\n${successes.length + failures.length} tests complete, ${
-    successes.length
-  } successes, ${failures.length} failures`
-);
+      [0.01, 0.02],
+    ]
+  ),
+  test(
+    "dotProductAttention returns correct attention distribution",
+    () =>
+      dotProductAttention(
+        [
+          [1, 0],
+          [0, 1],
+        ],
+        [
+          [1, 2],
+          [3, 4],
+        ],
+        [
+          [5, 6],
+          [7, 8],
+        ]
+      ),
+    "equals",
+    [
+      [6.61, 7.61],
+      [6.61, 7.61],
+    ]
+  ),
+  test(
+    "dotProductAttention raises error if Q and K are not the same length",
+    () =>
+      dotProductAttention(
+        [
+          [1, 0],
+          [0, 1],
+        ],
+        [
+          [1, 2],
+          [3, 4],
+          [5, 6],
+        ],
+        [
+          [5, 6],
+          [7, 8],
+          [9, 10],
+        ]
+      ),
+    "raises",
+    "Q and K must be the same length"
+  ),
+  test(
+    "dotProductAttention raises error if Q and K length are not equal to the MODEL_DIMENSIONS",
+    () =>
+      dotProductAttention(
+        [
+          [1, 0],
+          [0, 1],
+          [0, 1],
+        ],
+        [
+          [1, 2],
+          [3, 4],
+          [5, 6],
+        ],
+        [
+          [5, 6],
+          [7, 8],
+          [9, 10],
+        ]
+      ),
+    "raises",
+    "Q and K length must match the MODEL_DIMENSIONS"
+  ),
+]);
