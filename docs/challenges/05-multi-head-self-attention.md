@@ -73,9 +73,8 @@ Multi-Head Attention: Conceptual Walkthrough
 ### Implementation
 
 ```js
-// multiHeadAttention.js
-import { dotProductAttention } from "./dotProductAttention.js";
-
+import dotProductAttention from "./dotProductAttention.js";
+import { identityMatrix, matMul } from "./helpers.js";
 /**
  * multiHeadAttention
  * @param {number[][]} Q - shape (batchSize x modelDim)
@@ -85,63 +84,88 @@ import { dotProductAttention } from "./dotProductAttention.js";
  * @param {number} headDim
  * @returns {number[][]} - shape (batchSize x (numHeads*headDim)) i.e. (batchSize x modelDim)
  */
-export function multiHeadAttention(Q, K, V, numHeads, headDim) {
-  const batchSize = Q.length;
-  const modelDim = numHeads * headDim;
+export default (
+  Q,
+  K,
+  V,
+  {
+    // numberOfHeads is the number of attention heads
+    numberOfHeads,
+    // headDimensions is the dimensionality of each attention head
+    headDimensions,
+  }
+) => {
+  // The number of heads and the dimensionality of each head determine the dimensionality of the model.
+  // modelDimensions = numberOfHeads * headDimensions.
+  const modelDimensions = numberOfHeads * headDimensions;
 
-  // Sanity checks
+  // The "batch size" is the number of rows in Q, K, and V.
+  const batchSize = Q.length;
+
+  // Check you have Q, K, V each of shape [batchSize, modelDimensions].
   if (
-    Q[0].length !== modelDim ||
-    K[0].length !== modelDim ||
-    V[0].length !== modelDim
+    Q.length !== batchSize ||
+    K.length !== batchSize ||
+    V.length !== batchSize ||
+    Q[0].length !== modelDimensions ||
+    K[0].length !== modelDimensions ||
+    V[0].length !== modelDimensions
   ) {
-    throw new Error("Q/K/V dimensions must match numHeads*headDim.");
+    throw new Error(
+      "Q/K/V matrix dimensions must match the numberOfHeads * headDimensions"
+    );
   }
 
-  // We'll store each head's output in an array
+  const Q_parts = [];
+  const K_parts = [];
+  const V_parts = [];
+
+  // for each head, slice Q, K, and V into numberOfHeads sub-matrices.
+  // This gives you QKV sub-tensors of shape [batchSize, headDimensions] for each head.
+  // e.g. if Q = [ [1, 2], [3, 4] ]
+  // Q_parts = [ [ [ 1 ], [ 3 ] ], [ [ 2 ], [ 4 ] ] ]
+  for (let headIndex = 0; headIndex < numberOfHeads; headIndex++) {
+    const startCol = headIndex * headDimensions;
+    const endCol = startCol + headDimensions;
+    Q_parts.push(sliceMatrix(Q, startCol, endCol));
+    K_parts.push(sliceMatrix(K, startCol, endCol));
+    V_parts.push(sliceMatrix(V, startCol, endCol));
+  }
+
   const headsOutput = [];
 
-  // For each head:
-  for (let h = 0; h < numHeads; h++) {
-    // Slice Q, K, V columns for head h
-    // For example, if headDim=2, h=0 => columns 0..1, h=1 => columns 2..3, etc.
-    const startCol = h * headDim;
-    const endCol = startCol + headDim;
-
-    // Build sub-matrices Q_h, K_h, V_h of shape (batchSize x headDim)
-    let Q_h = sliceColumns(Q, startCol, endCol);
-    let K_h = sliceColumns(K, startCol, endCol);
-    let V_h = sliceColumns(V, startCol, endCol);
-
-    // Dot-product attention on these sub-matrices
-    // This returns shape (batchSize x headDim)
-    let attnOut = dotProductAttention(Q_h, K_h, V_h);
-
-    headsOutput.push(attnOut);
+  // For each head, you can now apply dotProductAttention.
+  // This produces one output of shape [batchSize, headDimensions] per head.
+  for (let headIndex = 0; headIndex < numberOfHeads; headIndex++) {
+    const attentionPart = dotProductAttention(
+      Q_parts[headIndex],
+      K_parts[headIndex],
+      V_parts[headIndex]
+    );
+    headsOutput.push(attentionPart);
   }
 
-  // Now we need to concatenate all heads horizontally
-  // e.g. each head is (batchSize x headDim) => final => (batchSize x (numHeads*headDim))
-  const concatenated = concatenateHeads(headsOutput); // implement a helper function
+  // Now you concat all the heads' outputs horizontally (along dimension = headDim).
+  // The final shape: batchSize * (numHeads * headDim), which is back to batchSize * modelDim.
+  const concatenatedHeads = concatenateHeads(headsOutput);
 
-  // Optionally, you could apply a final linear projection here:
-  // let final = matMul(concatenated, W_o) + b_o
-  // We'll skip that in this example.
-
-  return concatenated;
-}
+  // Apply a final linear transform, `W_0`, to the output.
+  // For now, just use an identity matrix of the correct size.
+  // Later, when we train the Transformer, we'll tell it to adjust this matrix.
+  const W_0 = identityMatrix(modelDimensions);
+  return matMul(concatenatedHeads, W_0);
+};
 
 /**
  * sliceColumns: returns sub-matrix of 'matrix' from [startCol..endCol).
  * @param {number[][]} matrix - shape (batchSize x totalCols)
  * @param {number} startCol
  * @param {number} endCol
+ * @returns {number[][]} - shape (batchSize x (endCol - startCol))
  */
-function sliceColumns(matrix, startCol, endCol) {
-  // e.g. if matrix = [ [1,2,3,4], [5,6,7,8] ] and startCol=1, endCol=3
-  // we return [ [2,3], [6,7] ]
+const sliceMatrix = (matrix, startCol, endCol) => {
   return matrix.map((row) => row.slice(startCol, endCol));
-}
+};
 
 /**
  * concatenateHeads: merges an array of matrices horizontally.
@@ -151,26 +175,23 @@ function sliceColumns(matrix, startCol, endCol) {
  *   ...
  * ]
  * => final shape (batchSize x (numHeads*headDim))
+ * @param {number[][][]} headsOutput - shape (numHeads x batchSize x headDim)
+ * @returns {number[][]} - shape (batchSize x (numHeads*headDim))
  */
-function concatenateHeads(headsOutput) {
-  // headsOutput might look like: [h1, h2, h3], each hX is shape (batchSize x headDim).
-  // We'll assume all have same batchSize
+const concatenateHeads = (headsOutput) => {
   const batchSize = headsOutput[0].length;
   const numHeads = headsOutput.length;
-  const headDim = headsOutput[0][0].length;
 
-  // Build final array
   let result = [];
   for (let i = 0; i < batchSize; i++) {
-    // row i from each head, concatenated
     let newRow = [];
-    for (let h = 0; h < numHeads; h++) {
-      newRow = newRow.concat(headsOutput[h][i]);
+    for (let headIndex = 0; headIndex < numHeads; headIndex++) {
+      newRow = newRow.concat(headsOutput[headIndex][i]);
     }
     result.push(newRow);
   }
   return result;
-}
+};
 ```
 
 ## TESTING
