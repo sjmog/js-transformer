@@ -4,6 +4,7 @@ import tokenize from "../src/tokenize.js";
 import embed, { defaultEmbeddingMatrix } from "../src/embedding.js";
 import dotProductAttention from "../src/dotProductAttention.js";
 import multiHeadAttention from "../src/multiHeadAttention.js";
+import feedForward from "../src/feedForward.js";
 import { runTests, test } from "./helpers.js";
 
 runTests([
@@ -110,12 +111,15 @@ runTests([
         [5, 6],
         [7, 8],
       ];
-      return multiHeadAttention(Q, K, V, { numberOfHeads: 2, headDimensions: 1 });
+      return multiHeadAttention(Q, K, V, {
+        numberOfHeads: 2,
+        headDimensions: 1,
+      });
     },
     "equals",
     [
       [6.76, 7.96],
-      [7.00, 8.00],
+      [7.0, 8.0],
     ]
   ),
   test(
@@ -140,5 +144,39 @@ runTests([
       ),
     "raises",
     "Q/K/V matrix dimensions must match the numberOfHeads * headDimensions"
+  ),
+  test(
+    "feedForward returns correct output",
+    () => {
+      const inputMatrix = [
+        [1, -2],
+        [-3, 4],
+      ];
+      
+      // identity matrix
+      const W_1 = [
+        [1, 0],
+        [0, 1],
+      ];
+      
+      // zero vector
+      const b_1 = [0, 0];
+      
+      // identity matrix
+      const W_2 = [
+        [1, 0],
+        [0, 1],
+      ];
+      
+      // zero vector
+      const b_2 = [0, 0];
+
+      return feedForward(inputMatrix, W_1, b_1, W_2, b_2);
+    },
+    "equals",
+    [
+      [1, 0],
+      [0, 4],
+    ]
   ),
 ]);

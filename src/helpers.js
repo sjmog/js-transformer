@@ -50,3 +50,17 @@ export const softmax = (vector) => {
 export const identityMatrix = (n) => {
   return Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 1 : 0)));
 };
+
+// apply the ReLU activation function to a matrix
+export const relu = (matrix) => {
+  return matrix.map((row) => row.map((x) => Math.max(0, x)));
+};
+
+// "stretch" a 1D array to match the dimensions of a matrix
+export const broadcast = (array, matrix) => {
+  return matrix.map((row) => row.map((_, i) => array[i]));
+};
+
+export const matAdd = (A, B) => {
+  return A.map((row, i) => row.map((value, j) => value + B[i][j]));
+};
